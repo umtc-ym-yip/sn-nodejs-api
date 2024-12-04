@@ -19,11 +19,11 @@ jobs:
       - name: Configure Git safe directory
         shell: powershell
         run: |
-          & "C:\Program Files\Git\cmd\git.exe" config --global --add safe.directory C:/Users/A1477/Desktop/project/sn-nodejs-api
+          & "C:\Users\A1477\AppData\Local\Programs\Git\cmd\git.exe" config --global --add safe.directory C:/Users/A1477/Desktop/project/sn-nodejs-api
           
       - name: Navigate and Deploy
         shell: powershell
         run: |
           cd "C:\Users\A1477\Desktop\project\sn-nodejs-api"
-          & "C:\Program Files\Git\cmd\git.exe" pull origin main
+          & "C:\Users\A1477\AppData\Local\Programs\Git\cmd\git.exe" pull origin main
           docker-compose up --build -d
