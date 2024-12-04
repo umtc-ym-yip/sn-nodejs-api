@@ -4,15 +4,9 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    types: [closed]
-    branches:
-      - main
 
 jobs:
   build:
-    # 當是 PR 事件時，只在合併後執行
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     runs-on: [self-hosted]
     
     steps:
@@ -25,7 +19,7 @@ jobs:
       - name: Configure Git safe directory
         shell: powershell
         run: |
-          & "C:\Users\A1477\AppData\Local\Programs\Git\cmd\git.exe" config --global --add safe.directory C:/Users/A1477/Desktop/project/sn-nodejs-api
+          & "C:\Users\A1477\AppData\Local\Programs\Git\cmd\git.exe" config --global --add safe.directory "C:/Users/A1477/Desktop/project/sn-nodejs-api"
           
       - name: Navigate and Deploy
         shell: powershell
