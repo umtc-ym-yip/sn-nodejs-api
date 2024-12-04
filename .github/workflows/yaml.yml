@@ -1,12 +1,15 @@
 name: Deploy to Docker
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
 
 jobs:
   build:
+    # 只在 PR 被合併時執行，而不是被關閉時
+    if: github.event.pull_request.merged == true
     runs-on: [self-hosted]
     
     steps:
