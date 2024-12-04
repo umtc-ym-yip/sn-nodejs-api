@@ -7,15 +7,17 @@ on:
 
 jobs:
   build:
-    runs-on: [self-hosted]  # 如果您的 runner 是 Linux 系統
+    runs-on: [self-hosted]
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Build and push Docker image
+      - name: Navigate to project directory
         run: |
-            cd "C:\Users\A1477\Desktop\project\sn-nodejs-api"
-            docker-compose up --build -d
+          cd "C:\Users\A1477\Desktop\project\sn-nodejs-api"
+          
+      - name: Pull latest changes
+        run: |
+          git pull origin main
+          
+      - name: Build and deploy Docker containers
+        run: |
+          docker-compose up --build -d
