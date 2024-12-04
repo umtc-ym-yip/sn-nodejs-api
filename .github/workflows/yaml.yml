@@ -10,17 +10,15 @@ jobs:
     runs-on: [self-hosted]
     
     steps:
-      - name: Setup Git environment
-        run: |
-          $env:Path += ";C:\Users\A1477\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Git\cmd"
-          
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          ref: main
           
-      - name: Navigate, Pull and Deploy
+      - name: Navigate and Deploy
+        shell: powershell
         run: |
           cd "C:\Users\A1477\Desktop\project\sn-nodejs-api"
-          git pull origin main
+          & "C:\Users\A1477\AppData\Local\Programs\Git\cmd\git.exe" pull origin main
           docker-compose up --build -d
