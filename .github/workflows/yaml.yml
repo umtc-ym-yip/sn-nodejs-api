@@ -1,22 +1,26 @@
 name: Deploy to Docker
 
 on:
- push:
-   branches:
-     - main
+  push:
+    branches:
+      - main
 
 jobs:
- build:
-   runs-on: [self-hosted]
-   
-   steps:
-     - name: Checkout code
-       uses: actions/checkout@v2
-       with:
-         fetch-depth: 0
-         
-     - name: Navigate, Pull and Deploy
-       run: |
-         cd "C:\Users\A1477\Desktop\project\sn-nodejs-api"
-         "C:\Program Files\Git\cmd\git.exe" pull origin main
-         docker-compose up --build -d
+  build:
+    runs-on: [self-hosted]
+    
+    steps:
+      - name: Setup Git environment
+        run: |
+          $env:Path += ";C:\Users\A1477\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Git\cmd"
+          
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          
+      - name: Navigate, Pull and Deploy
+        run: |
+          cd "C:\Users\A1477\Desktop\project\sn-nodejs-api"
+          git pull origin main
+          docker-compose up --build -d
