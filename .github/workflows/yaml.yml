@@ -1,6 +1,9 @@
 name: Deploy to Docker
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     types: [closed]
     branches:
@@ -8,8 +11,8 @@ on:
 
 jobs:
   build:
-    # 只在 PR 被合併時執行，而不是被關閉時
-    if: github.event.pull_request.merged == true
+    # 當是 PR 事件時，只在合併後執行
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     runs-on: [self-hosted]
     
     steps:
