@@ -15,7 +15,7 @@ const pool = mysql.createPool({
 
 // 簡單的 API 路由
 app.get('/', (req, res) => {
-  res.send('冠中和JC推輪椅又坐輪椅不知道在幹嘛(?');
+  res.send('chi666667');
 });
 
 // 查詢資料庫的 API

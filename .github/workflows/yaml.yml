@@ -1,29 +1,37 @@
 name: Deploy to Docker
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
-      - main
+      - dev
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true
     runs-on: [self-hosted]
     
     steps:
+      # 先設置 safe directory
+      - name: Configure Git safe directory
+        shell: powershell
+        run: |
+          git config --global --add safe.directory "C:/actions-runner-sn-nodejs-api/_work/sn-nodejs-api/sn-nodejs-api"
+          git config --global --add safe.directory "*"
+
+      # 然後執行 checkout
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          ref: main
+          ref: dev
           
-      - name: Configure Git safe directory
+      # 確保是最新的程式碼
+      - name: Pull latest changes
+        run: |
+          git pull origin dev
+          
+      - name: Deploy
         shell: powershell
         run: |
-          & "C:\Users\A1477\AppData\Local\Programs\Git\cmd\git.exe" config --global --add safe.directory C:/Users/A1477/Desktop/project/sn-nodejs-api
-          
-      - name: Navigate and Deploy
-        shell: powershell
-        run: |
-          cd "C:\Users\A1477\Desktop\project\sn-nodejs-api"
-          & "C:\Users\A1477\AppData\Local\Programs\Git\cmd\git.exe" pull origin main
           docker-compose up --build -d
