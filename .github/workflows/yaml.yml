@@ -12,20 +12,26 @@ jobs:
     runs-on: [self-hosted]
     
     steps:
+      # 先設置 safe directory
+      - name: Configure Git safe directory
+        shell: powershell
+        run: |
+          git config --global --add safe.directory "C:/actions-runner-sn-nodejs-api/_work/sn-nodejs-api/sn-nodejs-api"
+          git config --global --add safe.directory "*"
+
+      # 然後執行 checkout
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
           ref: dev
           
-      - name: Configure Git safe directory
-        shell: powershell
+      # 確保是最新的程式碼
+      - name: Pull latest changes
         run: |
-          git config --global --add safe.directory "C:/actions-runner-sn-nodejs-api/_work/sn-nodejs-api/sn-nodejs-api"
-          
-      - name: Navigate and Deploy
-        shell: powershell
-        run: |
-          cd "C:\Users\A1477\Desktop\project\sn-nodejs-api"
           git pull origin dev
+          
+      - name: Deploy
+        shell: powershell
+        run: |
           docker-compose up --build -d
