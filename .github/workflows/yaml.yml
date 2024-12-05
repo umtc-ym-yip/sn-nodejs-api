@@ -21,7 +21,8 @@ jobs:
       - name: Configure Git safe directory
         shell: powershell
         run: |
-          git config --global --add safe.directory "C:/Users/A1477/Desktop/project/sn-nodejs-api"
+          git config --global --add safe.directory "C:/actions-runner-sn-nodejs-api/_work/sn-nodejs-api/sn-nodejs-api"
+          
           
       - name: Navigate and Deploy
         shell: powershell
