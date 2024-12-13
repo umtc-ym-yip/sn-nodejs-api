@@ -1,0 +1,211 @@
+openapi: 3.0.0
+info:
+  title: 用戶認證 API
+  description: 提供用戶登入、驗證和記錄相關的 API
+  version: 1.0.0
+
+servers:
+  - url: http://10.22.94.69:3000
+    description: 開發環境
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - EMPID
+        - PWD
+      properties:
+        EMPID:
+          type: string
+          description: 用戶帳號
+        PWD:
+          type: string
+          description: 用戶密碼
+    
+    LoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "成功"
+        token:
+          type: string
+          description: JWT token
+        userinfo:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            DeptName:
+              type: string
+            Status:
+              type: boolean
+
+    RecordRequest:
+      type: object
+      required:
+        - ID
+        - Name
+        - DeptName
+        - Time
+        - Path
+      properties:
+        ID:
+          type: string
+          description: 用戶 ID
+        Name:
+          type: string
+          description: 用戶名稱
+        DeptName:
+          type: string
+          description: 部門名稱
+        Time:
+          type: string
+          description: 時間戳記
+        Path:
+          type: string
+          description: 訪問路徑
+
+paths:
+  /user/login:
+    post:
+      summary: 用戶登入
+      description: 驗證用戶憑證並返回 JWT token
+      tags:
+        - 認證
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登入成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: 認證失敗
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "用戶不存在或帳號密碼錯誤，請重新輸入"
+        '403':
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "非YM或白名單用戶"
+
+  /user/verify:
+    get:
+      summary: 驗證用戶 Token
+      description: 驗證用戶的 JWT token 是否有效
+      tags:
+        - 認證
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token 有效
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "成功"
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      DeptName:
+                        type: string
+
+  /user/record:
+    post:
+      summary: 創建訪問記錄
+      description: 記錄用戶的訪問資訊
+      tags:
+        - 記錄
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordRequest'
+      responses:
+        '200':
+          description: 記錄成功
+        '500':
+          description: 記錄失敗
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "記錄保存失敗"
+
+  /user/record/{st}:
+    get:
+      summary: 獲取訪問記錄數量
+      description: 獲取特定時間後的登入記錄數量
+      tags:
+        - 記錄
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: st
+          in: path
+          required: true
+          description: 起始時間戳記
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Count:
+                    type: integer
+                    description: 記錄數量
+        '500':
+          description: 查詢失敗
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "查詢記錄失敗" 
