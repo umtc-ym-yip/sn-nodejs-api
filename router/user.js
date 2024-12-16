@@ -18,7 +18,7 @@ router.use((req, res, next) => {
 });
 
 const key = 'YMYIP';
-const whiteList = ['00776', '05866', '09068', 'A0274'];
+// const whiteList = ['00776', '05866', '09068', 'A0274'];
 const SOAP_TIMEOUT = 30000; // 30秒超時
 
 router.use(bodyParser.json());
@@ -50,6 +50,12 @@ router.post('/login', async (req, res) => {
                 }
             });
         });
+        //給我一個現在時間的函式
+        const now = new Date();
+        console.log('現在時間',now);
+        const time=now.getTime()
+        console.log('時間戳',time);
+        
 
         // 調用 SOAP 服務
         const result = await new Promise((resolve, reject) => {
@@ -65,16 +71,14 @@ router.post('/login', async (req, res) => {
         console.log('結果',result);
         // 處理認證結果
         if (!result || !result.Myumt_AuthResult) {
-            return res.status(500).json({ message: '認證服務返回無效結果' });
+            return res.status(500).json({ status: 'error', message: '認證服務返回無效結果' ,time});
         }
-
+        // if (result.Myumt_AuthResult.DeptName.includes('YM') === false && 
+        //     whiteList.includes(result.Myumt_AuthResult.id) === false) {
+        //     return res.status(403).json({ status: 'error', message: '非YM或白名單用戶' });
+        // }
         if (result.Myumt_AuthResult.Status === false) {
-            return res.status(401).json({ message: '用戶不存在或帳號密碼錯誤，請重新輸入' });
-        }
-
-        if (result.Myumt_AuthResult.DeptName.includes('YM') === false && 
-            whiteList.includes(result.Myumt_AuthResult.id) === false) {
-            return res.status(403).json({ message: '非YM或白名單用戶' });
+            return res.status(401).json({ status: 'error', message: '用戶不存在或帳號密碼錯誤，請重新輸入' ,time});
         }
 
         // 生成 JWT token
@@ -82,30 +86,35 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign({ id, name, DeptName }, key);
 
         res.json({
+            status: 'success',
             message: '成功',
             token,
-            userinfo: result.Myumt_AuthResult
+            data: result.Myumt_AuthResult,
+            time,
         });
 
     } catch (error) {
         console.error('登入處理失敗:', error);
         res.status(500).json({
+            status: 'error',
             message: '服務暫時無法使用，請稍後再試',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+            time, 
         });
     }
 });
 
 // Token 驗證中間件
 const verifyToken = (req, res, next) => {
+    const time=new Date().getTime()
     const token = req.headers['authorization'];
     if (!token) {
-        return res.status(401).json({ message: '未登入' });
+        return res.status(401).json({ status: 'error', message: '未登入' ,time});
     }
 
     jwt.verify(token, key, (err, user) => {
         if (err) {
-            return res.status(403).json({ message: '驗證錯誤' });
+            return res.status(403).json({ status: 'error', message: '驗證錯誤' ,time});
         }
         req.user = user;
         next();
@@ -114,11 +123,13 @@ const verifyToken = (req, res, next) => {
 
 // 驗證路由
 router.get('/verify', verifyToken, (req, res) => {
-    res.json({ message: '成功', user: req.user });
+    const time=new Date().getTime()
+    res.json({ status: 'success', message: '成功', user: req.user,time });
 });
 
 // 記錄路由
 router.post('/record', verifyToken, async (req, res) => {
+    const time=new Date().getTime()
     try {
         const { ID, Name, DeptName, Time, Path } = req.body;
         const connection = await mysqlConnection(configFunc('user'));
@@ -127,15 +138,16 @@ router.post('/record', verifyToken, async (req, res) => {
                        VALUES (?, ?, ?, ?, ?)`;
         const result = await queryFunc(connection, sqlStr, [ID, Name, DeptName, Time, Path]);
         
-        res.json(result);
+        res.json({status:'success',message:'成功',data:result,time});
     } catch (error) {
         console.error('記錄創建失敗:', error);
-        res.status(500).json({ message: '記錄創建失敗' });
+        res.status(500).json({ status: 'error', message: '記錄創建失敗' ,time});
     }
 });
 
 // 獲取記錄數量
 router.get('/record/:st', verifyToken, async (req, res) => {
+    const time=new Date().getTime()
     try {
         const { st } = req.params;
         const connection = await mysqlConnection(configFunc('user'));
@@ -145,10 +157,10 @@ router.get('/record/:st', verifyToken, async (req, res) => {
                        WHERE Path = '/login' AND Time >= ?`;
         const result = await queryFunc(connection, sqlStr, [transSt]);
         
-        res.json(result);
+        res.json({status:'success',message:'成功',data:result,time});
     } catch (error) {
         console.error('記錄查詢失敗:', error);
-        res.status(500).json({ message: '記錄查詢失敗' });
+        res.status(500).json({ status: 'error', message: '記錄查詢失敗' ,time});
     }
 });
 

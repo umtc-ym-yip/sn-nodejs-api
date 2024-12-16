@@ -16,6 +16,20 @@ components:
       bearerFormat: JWT
   
   schemas:
+    StandardResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          description: 響應狀態
+        message:
+          type: string
+          description: 響應訊息
+        time:
+          type: integer
+          description: 時間戳
+          
     LoginRequest:
       type: object
       required:
@@ -30,50 +44,24 @@ components:
           description: 用戶密碼
     
     LoginResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          example: "成功"
-        token:
-          type: string
-          description: JWT token
-        userinfo:
-          type: object
+      allOf:
+        - $ref: '#/components/schemas/StandardResponse'
+        - type: object
           properties:
-            id:
+            token:
               type: string
-            name:
-              type: string
-            DeptName:
-              type: string
-            Status:
-              type: boolean
-
-    RecordRequest:
-      type: object
-      required:
-        - ID
-        - Name
-        - DeptName
-        - Time
-        - Path
-      properties:
-        ID:
-          type: string
-          description: 用戶 ID
-        Name:
-          type: string
-          description: 用戶名稱
-        DeptName:
-          type: string
-          description: 部門名稱
-        Time:
-          type: string
-          description: 時間戳記
-        Path:
-          type: string
-          description: 訪問路徑
+              description: JWT token
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                DeptName:
+                  type: string
+                Status:
+                  type: boolean
 
 paths:
   /user/login:
@@ -100,21 +88,23 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "用戶不存在或帳號密碼錯誤，請重新輸入"
-        '403':
-          description: 權限不足
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - example:
+                      status: error
+                      message: 用戶不存在或帳號密碼錯誤，請重新輸入
+                      time: 1234567890
+        '500':
+          description: 服務器錯誤
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "非YM或白名單用戶"
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - example:
+                      status: error
+                      message: 服務暫時無法使用，請稍後再試
+                      time: 1234567890
 
   /user/verify:
     get:
@@ -130,20 +120,41 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "成功"
-                  user:
-                    type: object
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
                     properties:
-                      id:
-                        type: string
-                      name:
-                        type: string
-                      DeptName:
-                        type: string
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          DeptName:
+                            type: string
+        '401':
+          description: 未登入
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - example:
+                      status: error
+                      message: 未登入
+                      time: 1234567890
+        '403':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - example:
+                      status: error
+                      message: 驗證錯誤
+                      time: 1234567890
 
   /user/record:
     post:
@@ -158,20 +169,47 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecordRequest'
+              type: object
+              required:
+                - ID
+                - Name
+                - DeptName
+                - Time
+                - Path
+              properties:
+                ID:
+                  type: string
+                Name:
+                  type: string
+                DeptName:
+                  type: string
+                Time:
+                  type: string
+                Path:
+                  type: string
       responses:
         '200':
           description: 記錄成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
         '500':
           description: 記錄失敗
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "記錄保存失敗"
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - example:
+                      status: error
+                      message: 記錄創建失敗
+                      time: 1234567890
 
   /user/record/{st}:
     get:
@@ -194,18 +232,25 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  Count:
-                    type: integer
-                    description: 記錄數量
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            Count:
+                              type: integer
         '500':
           description: 查詢失敗
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "查詢記錄失敗" 
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - example:
+                      status: error
+                      message: 記錄查詢失敗
+                      time: 1234567890
