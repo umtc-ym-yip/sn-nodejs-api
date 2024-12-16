@@ -126,7 +126,7 @@ paths:
       summary: 驗證用戶 Token
       description: 驗證用戶的 JWT token 是否有效
       tags:
-        - 認證
+        - verify
       security:
         - BearerAuth: []
       responses:
