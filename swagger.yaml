@@ -54,15 +54,30 @@ components:
             data:
               type: object
               properties:
+                Status:
+                  type: boolean
+                ErrDesc:
+                  type: string
+                company_id:
+                  type: string
                 id:
                   type: string
                 name:
                   type: string
                 DeptName:
                   type: string
-                Status:
-                  type: boolean
-
+                d1name:
+                  type: string
+                d2name:
+                  type: string
+                d3name:
+                  type: string
+                d4name:
+                  type: string
+                email:
+                  type: string
+                bossid:
+                  type: string
 paths:
   /user/login:
     post:
