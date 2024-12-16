@@ -84,7 +84,7 @@ paths:
       summary: 用戶登入
       description: 驗證用戶憑證並返回 JWT token
       tags:
-        - 認證
+        - authentication
       requestBody:
         required: true
         content:
