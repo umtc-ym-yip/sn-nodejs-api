@@ -148,6 +148,8 @@ paths:
                             type: string
                           DeptName:
                             type: string
+                          email:
+                            type: string
         '401':
           description: 未登入
           content:
