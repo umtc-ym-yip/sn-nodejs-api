@@ -82,8 +82,8 @@ router.post('/login', async (req, res) => {
         }
 
         // 生成 JWT token
-        const { id, name, DeptName } = result.Myumt_AuthResult;
-        const token = jwt.sign({ id, name, DeptName }, key);
+        const { id, name, DeptName,email } = result.Myumt_AuthResult;
+        const token = jwt.sign({ id, name, DeptName,email }, key);
 
         res.json({
             status: 'success',
