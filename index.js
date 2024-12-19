@@ -13,6 +13,7 @@ const initDatabase = async () => {
         await db.initAllPools();
         
         // 設定路由
+        app.use('/daily/aoi', require('./daily/aoi.js'));
         app.use('/user', require('./router/user.js'));
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
         // 簡單的 API 路由
