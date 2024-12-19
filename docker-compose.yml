@@ -9,6 +9,8 @@ services:
       - /d/sn-mysql:/var/lib/mysql  # 本地 SSD 位置
     networks:
       - app-network
+    ports:
+      - "3306:3306"
     restart: always
 
   api:
