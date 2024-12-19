@@ -22,25 +22,6 @@ const queryFunc=(connection,sql,data)=>{
     })
 };
 
-// function query(params,callback){
-//     ////params 去處理一個查詢
-
-
-
-
-//     let result=....;
-//     let error=....;
-//     callback(error,result)
-// }
-
-// query(params,(err,result)=>{
-//     if(err){
-//         console.log(err)
-//     }else{
-//         console.log(result)
-//     }
-// })
-
 module.exports={
     mysqlConnection,
     queryFunc

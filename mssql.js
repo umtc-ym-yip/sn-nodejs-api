@@ -26,6 +26,14 @@ const defaultPoolConfig = {
 
 // 數據庫配置
 const dbConfigs = {
+  H3Acme: {
+    server: "utchfacmrpt",
+    user: "S3YIP",
+    password: "yipread",
+    database: "acme",
+    options: { ...defaultOptions, requestTimeout: 600000 },
+    pool: defaultPoolConfig,
+  },
   SPC: {
     server: "10.22.65.134",
     user: "ymyip",
@@ -50,62 +58,62 @@ const dbConfigs = {
     options: defaultOptions,
     pool: defaultPoolConfig,
   },
-  Dchold: {
-    server: "UTCYMACMT02",
-    user: "dc",
-    password: "dc",
-    database: "dc",
-    options: defaultOptions,
-    pool: defaultPoolConfig,
-  },
-  Acme: {
-    server: "10.22.65.120",
-    user: "dc",
-    password: "dc",
-    database: "acme",
-    options: { ...defaultOptions, requestTimeout: 600000 },
-    pool: defaultPoolConfig,
-  },
-  NCN: {
-    server: "10.22.65.134",
-    user: "ymyip",
-    password: "5CQPBcyE",
-    database: "NCN",
-    options: defaultOptions,
-    pool: defaultPoolConfig,
-  },
-  NCNTest: {
-    server: "10.22.65.134",
-    user: "ymyip",
-    password: "5CQPBcyE",
-    database: "NCN_TEST",
-    options: defaultOptions,
-    pool: defaultPoolConfig,
-  },
-  Bga: {
-    server: "Utcsycimdw01",
-    user: "Pc_user",
-    password: "Aa12345",
-    database: "bga_eda",
-    options: defaultOptions,
-    pool: defaultPoolConfig,
-  },
-  Edc: {
-    server: "10.22.66.37",
-    user: "EDC_reader",
-    password: "e@Iu(E08",
-    database: "YM_EDC",
-    options: defaultOptions,
-    pool: defaultPoolConfig,
-  },
-  Metrology: {
-    server: "10.22.66.37",
-    user: "ymyip",
-    password: "pr&rZw93",
-    database: "YM_Metrology",
-    options: { ...defaultOptions, requestTimeout: 3000000 },
-    pool: defaultPoolConfig,
-  },
+  // Dchold: {
+  //   server: "UTCYMACMT02",
+  //   user: "dc",
+  //   password: "dc",
+  //   database: "dc",
+  //   options: defaultOptions,
+  //   pool: defaultPoolConfig,
+  // },
+  // Acme: {
+  //   server: "10.22.65.120",
+  //   user: "dc",
+  //   password: "dc",
+  //   database: "acme",
+  //   options: { ...defaultOptions, requestTimeout: 600000 },
+  //   pool: defaultPoolConfig,
+  // },
+  // NCN: {
+  //   server: "10.22.65.134",
+  //   user: "ymyip",
+  //   password: "5CQPBcyE",
+  //   database: "NCN",
+  //   options: defaultOptions,
+  //   pool: defaultPoolConfig,
+  // },
+  // NCNTest: {
+  //   server: "10.22.65.134",
+  //   user: "ymyip",
+  //   password: "5CQPBcyE",
+  //   database: "NCN_TEST",
+  //   options: defaultOptions,
+  //   pool: defaultPoolConfig,
+  // },
+  // Bga: {
+  //   server: "Utcsycimdw01",
+  //   user: "Pc_user",
+  //   password: "Aa12345",
+  //   database: "bga_eda",
+  //   options: defaultOptions,
+  //   pool: defaultPoolConfig,
+  // },
+  // Edc: {
+  //   server: "10.22.66.37",
+  //   user: "EDC_reader",
+  //   password: "e@Iu(E08",
+  //   database: "YM_EDC",
+  //   options: defaultOptions,
+  //   pool: defaultPoolConfig,
+  // },
+  // Metrology: {
+  //   server: "10.22.66.37",
+  //   user: "ymyip",
+  //   password: "pr&rZw93",
+  //   database: "YM_Metrology",
+  //   options: { ...defaultOptions, requestTimeout: 3000000 },
+  //   pool: defaultPoolConfig,
+  // },
   SNAcme: {
     server: "UTCSNACMLSNR",
     user: "dc_read",
@@ -143,17 +151,19 @@ const createPool = async (config, name) => {
   }
 };
 
+// 修改初始化和導出方式
+const poolObj = {};
+
 // 初始化所有連接池
 const initializePools = async () => {
-  const pools = {};
   for (const [name, config] of Object.entries(dbConfigs)) {
     try {
-      pools[`pool${name}`] = await createPool(config, name);
+      poolObj[`pool${name}`] = await createPool(config, name);
     } catch (err) {
       console.error(`Failed to initialize ${name} pool`, err);
     }
   }
-  return pools;
+  return poolObj;
 };
 
 // 優雅關閉
@@ -169,6 +179,8 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// 初始化並導出連接池
-const poolObj = await initializePools();
-module.exports = poolObj;
+// 移除頂層 await
+module.exports = {
+  initializePools,
+  poolObj
+};
