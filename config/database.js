@@ -1,8 +1,8 @@
 // 基礎配置
 const baseConfig = {
-    host: 'localhost',
+    host: '10.22.94.69',
     user: 'root',
-    port: 3306,
+    port: 8080,
     password: 'pwd123',
     // 連接池設置
     // connectionLimit: 1000,
