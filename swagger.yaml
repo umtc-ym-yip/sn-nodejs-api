@@ -5,7 +5,7 @@ info:
   version: 1.0.0
 
 servers:
-  - url: http://10.22.94.69:3000
+  - url: http://localhost:3000
     description: 開發環境
 
 components:
@@ -347,34 +347,35 @@ paths:
                       time: 1234567890
 
   /user/revisewhitelist:
-    get:
+    post:
       summary: 修改用戶白名單權限
       tags:
         - authentication
-      parameters:
-        - in: query
-          name: uid
-          required: true
-          schema:
-            type: string
-          description: 用戶ID
-          example: "A4378"
-        - in: query
-          name: authority
-          required: true
-          schema:
-            type: array
-            items:
-              type: string
-          description: 權限列表
-          example: ["1673"]
-        - in: query
-          name: creater
-          required: true
-          schema:
-            type: string
-          description: 創建者ID
-          example: "A4378"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - uid
+                - authority
+                - creater
+              properties:
+                uid:
+                  type: string
+                  description: 用戶ID
+                  example: "A4378"
+                authority:
+                  type: array
+                  items:
+                    type: string
+                  description: 權限列表
+                  example: ["1673"]
+                creater:
+                  type: string
+                  description: 創建者ID
+                  example: "A4378"
       responses:
         '200':
           description: 修改成功
