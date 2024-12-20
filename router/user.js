@@ -208,10 +208,10 @@ router.post('/revisewhitelist', async (req, res) => {
     const dateStr = date.toISOString().slice(0, 19).replace('T', ' ');
     console.log(dateStr);
     try {
-        const { uid, authority, creater } = req.body;
+        const { uid, authority, creator } = req.body;
         console.log(req.body);
         // 驗證必要參數
-        if (!uid || !authority || !creater) {
+        if (!uid || !authority || !creator) {
             return res.status(400).json({
                 status: 'error',
                 message: '缺少必要參數',
@@ -237,8 +237,8 @@ router.post('/revisewhitelist', async (req, res) => {
                 const resultid = await queryFunc(connection, sqlStrid);
                 const id = resultid[0].Count + 1;
                 const sqlStrinsert = `
-                    INSERT INTO Whitelist (id,uid, authority, creater, isdelete,time) 
-                    VALUES ('${id}','${uid}', '${auth}', '${creater}', 'false','${dateStr}')`;
+                    INSERT INTO Whitelist (id,uid, authority, creator, isdelete,time) 
+                    VALUES ('${id}','${uid}', '${auth}', '${creator}', 'false','${dateStr}')`;
                     // console.log(sqlStrinsert);
                 await queryFunc(connection, sqlStrinsert);
             }
@@ -252,7 +252,7 @@ router.post('/revisewhitelist', async (req, res) => {
                 data: {
                     uid,
                     authority,
-                    creater
+                    creator
                 },
                 time
             });
