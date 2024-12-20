@@ -4,16 +4,31 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const { configFunc } = require('../config.js');
 const { mysqlConnection, queryFunc } = require('../mysql.js');
+const getDbConfig = require('../config/database');
 const { timestampToYMDHIS } = require('../time.js');
 
 const router = express.Router();
 
 // CORS 設置
 router.use((req, res, next) => {
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-type,Accept,X-Access-Token,X-Key,Authorization');
+    // 允許特定來源或使用 * 允許所有來源
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Credentials', true);
+    
+    // 允許的 HTTP 方法
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    
+    // 允許的請求頭
+    res.header('Access-Control-Allow-Headers', 
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    // 允許發送認證信息
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // 處理 OPTIONS 請求
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    
     next();
 });
 
@@ -132,9 +147,9 @@ router.post('/record', verifyToken, async (req, res) => {
     const time=new Date().getTime()
     try {
         const { ID, Name, DeptName, Time, Path } = req.body;
-        const connection = await mysqlConnection(configFunc('user'));
+        const connection = await mysqlConnection(getDbConfig('user'));
         
-        const sqlStr = `INSERT INTO record(ID, Name, DeptName, Time, Path) 
+        const sqlStr = `INSERT INTO user_record(ID, Name, DeptName, Time, Path) 
                        VALUES (?, ?, ?, ?, ?)`;
         const result = await queryFunc(connection, sqlStr, [ID, Name, DeptName, Time, Path]);
         
@@ -150,10 +165,10 @@ router.get('/record/:st', verifyToken, async (req, res) => {
     const time=new Date().getTime()
     try {
         const { st } = req.params;
-        const connection = await mysqlConnection(configFunc('user'));
+        const connection = await mysqlConnection(getDbConfig('user'));
         const transSt = timestampToYMDHIS(new Date(Number(st)));
         
-        const sqlStr = `SELECT Count(*) as Count FROM record 
+        const sqlStr = `SELECT Count(*) as Count FROM user_record 
                        WHERE Path = '/login' AND Time >= ?`;
         const result = await queryFunc(connection, sqlStr, [transSt]);
         
@@ -161,6 +176,72 @@ router.get('/record/:st', verifyToken, async (req, res) => {
     } catch (error) {
         console.error('記錄查詢失敗:', error);
         res.status(500).json({ status: 'error', message: '記錄查詢失敗' ,time});
+    }
+});
+
+
+router.get('/revisewhitelist', async (req, res) => {
+    const time = new Date().getTime();
+    try {
+        const { uid, authority, creater } = req.query;
+        
+        // 驗證必要參數
+        if (!uid || !authority || !creater) {
+            return res.status(400).json({
+                status: 'error',
+                message: '缺少必要參數',
+                time
+            });
+        }
+
+        // 如果 authority 是字符串，轉換為數組
+        const authorityArray = Array.isArray(authority) ? authority : [authority];
+
+        const connection = await mysqlConnection(getDbConfig('user'));
+        
+        // 使用事務確保數據一致性
+        await connection.beginTransaction();
+        
+        try {
+            // 先將現有權限標記為刪除
+            const sqlStrrevise = `UPDATE user_authority SET isdelete = 'true' WHERE uid = ?`;
+            await queryFunc(connection, sqlStrrevise, [uid]);
+            
+            // 插入新的權限
+            for (const auth of authorityArray) {
+                const sqlStrinsert = `
+                    INSERT INTO user_authority(uid, authority, creater, isdelete) 
+                    VALUES (?, ?, ?, 'false')`;
+                await queryFunc(connection, sqlStrinsert, [uid, auth, creater]);
+            }
+            
+            // 提交事務
+            await connection.commit();
+            
+            res.status(200).json({
+                status: 'success',
+                message: '成功',
+                data: {
+                    uid,
+                    authority: authorityArray,
+                    creater
+                },
+                time
+            });
+            
+        } catch (error) {
+            // 如果出錯，回滾事務
+            await connection.rollback();
+            throw error;
+        }
+        
+    } catch (error) {
+        console.error('記錄創建失敗:', error);
+        res.status(500).json({
+            status: 'error',
+            message: '記錄創建失敗',
+            time
+        });
     }
 });
 

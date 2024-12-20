@@ -2,7 +2,7 @@
 const baseConfig = {
     host: '10.22.94.69',
     user: 'root',
-    port: 8080,
+    port: 3306,
     password: 'pwd123',
     // 連接池設置
     // connectionLimit: 1000,
@@ -11,6 +11,18 @@ const baseConfig = {
     // 只保留支持的超時設置
     // connectTimeout: 60000
 };
+// const baseConfig = {
+//     host: '10.22.94.222',
+//     user: 'user_marvin',
+//     // port: 3306,
+//     password: 'pwd123',
+//     // 連接池設置
+//     // connectionLimit: 1000,
+//     // waitForConnections: true,
+//     // queueLimit: 0,
+//     // 只保留支持的超時設置
+//     // connectTimeout: 60000
+// };
 
 // 創建數據庫配置的函數
 const getDbConfig = (database) => ({

@@ -14,6 +14,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: "請輸入 JWT token，格式為: Bearer <token>"
   
   schemas:
     StandardResponse:
@@ -78,6 +79,79 @@ components:
                   type: string
                 bossid:
                   type: string
+
+    ReviseWhitelistRequest:
+      type: object
+      required:
+        - uid
+        - authority
+        - creater
+      properties:
+        uid:
+          type: string
+          description: 用戶ID
+        authority:
+          type: array
+          items:
+            type: string
+          description: 權限列表
+        creater:
+          type: string
+          description: 創建者ID
+
+    ReviseWhitelistResponse:
+      allOf:
+        - $ref: '#/components/schemas/StandardResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                uid:
+                  type: string
+                authority:
+                  type: array
+                  items:
+                    type: string
+                creater:
+                  type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+          description: 響應狀態
+        message:
+          type: string
+          description: 響應訊息
+        time:
+          type: integer
+          description: 時間戳
+
+  responses:
+    BadRequest:
+      description: 請求參數錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    Unauthorized:
+      description: 未登入
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    ServerError:
+      description: 服務器錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
 paths:
   /user/login:
     post:
@@ -271,3 +345,65 @@ paths:
                       status: error
                       message: 記錄查詢失敗
                       time: 1234567890
+
+  /user/revisewhitelist:
+    get:
+      summary: 修改用戶白名單權限
+      tags:
+        - authentication
+      parameters:
+        - in: query
+          name: uid
+          required: true
+          schema:
+            type: string
+          description: 用戶ID
+          example: "A4378"
+        - in: query
+          name: authority
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          description: 權限列表
+          example: ["1673"]
+        - in: query
+          name: creater
+          required: true
+          schema:
+            type: string
+          description: 創建者ID
+          example: "A4378"
+      responses:
+        '200':
+          description: 修改成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      uid:
+                        type: string
+                      authority:
+                        type: array
+                        items:
+                          type: string
+                      creater:
+                        type: string
+                  time:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
