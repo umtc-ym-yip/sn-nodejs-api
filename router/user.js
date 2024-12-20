@@ -97,8 +97,19 @@ router.post('/login', async (req, res) => {
         }
 
         // 生成 JWT token
-        const { id, name, DeptName,email } = result.Myumt_AuthResult;
-        const token = jwt.sign({ id, name, DeptName,email }, key);
+        const { id, name, DeptName,email,d1name } = result.Myumt_AuthResult;
+        const whitelist = await queryFunc(connection, sqlStr);
+        const authority = whitelist.map(item => item.authority).push(d1name);
+
+        const token = jwt.sign({ id, name, DeptName,email,authority }, key);
+        // 獲取白名單
+        const connection = await mysqlConnection(getDbConfig('user'));
+
+        // 先將現有權限標記為刪除
+        const sqlStr = `SELECT * FROM Whitelist WHERE isdelete = 'false' AND uid = '${id}'`;
+        // console.log(sqlStrrevise);
+        
+        result.Myumt_AuthResult.authority = authority;
 
         res.json({
             status: 'success',
@@ -117,6 +128,15 @@ router.post('/login', async (req, res) => {
             time, 
         });
     }
+});
+
+// 獲取白名單
+router.get('/getwhitelist', async (req, res) => {
+    const time=new Date().getTime()
+    const connection = await mysqlConnection(getDbConfig('user'));
+    const sqlStr = `SELECT * FROM Whitelist WHERE isdelete = 'false'`;
+    const result = await queryFunc(connection, sqlStr);
+    res.json({status:'success',message:'成功',data:result,time});
 });
 
 // Token 驗證中間件
