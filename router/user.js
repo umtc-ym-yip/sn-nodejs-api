@@ -180,11 +180,16 @@ router.get('/record/:st', verifyToken, async (req, res) => {
 });
 
 
-router.get('/revisewhitelist', async (req, res) => {
+router.post('/revisewhitelist', async (req, res) => {
     const time = new Date().getTime();
+    console.log(time);
+    // 將時間戳轉換為日期 格式為2024-12-20 00:00:00
+    const date = new Date(time);
+    const dateStr = date.toISOString().slice(0, 19).replace('T', ' ');
+    console.log(dateStr);
     try {
-        const { uid, authority, creater } = req.query;
-        
+        const { uid, authority, creater } = req.body;
+        console.log(req.body);
         // 驗證必要參數
         if (!uid || !authority || !creater) {
             return res.status(400).json({
@@ -194,36 +199,39 @@ router.get('/revisewhitelist', async (req, res) => {
             });
         }
 
-        // 如果 authority 是字符串，轉換為數組
-        const authorityArray = Array.isArray(authority) ? authority : [authority];
-
         const connection = await mysqlConnection(getDbConfig('user'));
-        
+    
         // 使用事務確保數據一致性
-        await connection.beginTransaction();
+        // await connection.beginTransaction();
         
         try {
             // 先將現有權限標記為刪除
-            const sqlStrrevise = `UPDATE user_authority SET isdelete = 'true' WHERE uid = ?`;
-            await queryFunc(connection, sqlStrrevise, [uid]);
+            const sqlStrrevise = `UPDATE Whitelist SET isdelete = 'true' WHERE uid = '${uid}'`;
+            // console.log(sqlStrrevise);
+            await queryFunc(connection, sqlStrrevise);
             
             // 插入新的權限
-            for (const auth of authorityArray) {
+            for (const auth of authority) {
+                //可以抓出id這個資料表的資料數量
+                const sqlStrid = `SELECT COUNT(*) as Count FROM Whitelist`;
+                const resultid = await queryFunc(connection, sqlStrid);
+                const id = resultid[0].Count + 1;
                 const sqlStrinsert = `
-                    INSERT INTO user_authority(uid, authority, creater, isdelete) 
-                    VALUES (?, ?, ?, 'false')`;
-                await queryFunc(connection, sqlStrinsert, [uid, auth, creater]);
+                    INSERT INTO Whitelist (id,uid, authority, creater, isdelete,time) 
+                    VALUES ('${id}','${uid}', '${auth}', '${creater}', 'false','${dateStr}')`;
+                    // console.log(sqlStrinsert);
+                await queryFunc(connection, sqlStrinsert);
             }
             
             // 提交事務
-            await connection.commit();
+            // await connection.commit();
             
             res.status(200).json({
                 status: 'success',
                 message: '成功',
                 data: {
                     uid,
-                    authority: authorityArray,
+                    authority,
                     creater
                 },
                 time
