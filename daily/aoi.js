@@ -27,10 +27,18 @@ router.use(async (req, res, next) => {
     }
 });
 
+
+router.get("/trigger", async (req, res) => {
+  const aoiconn = await mysqlConnection(getDbConfig('aoi'));
+  const triggerData = await queryFunc(aoiconn, `SELECT * FROM sn_aoi_trigger `);
+  console.log(triggerData);
+    res.json(triggerData);
+});
+
+
 router.get("/sndailyadd", async (req, res) => {
     try {
-      const aoiconn = await mysqlConnection(getDbConfig('paoi'));
-      console.log(aoiconn);
+      
       const endTime = new Date();
       endTime.setDate(endTime.getDate() );
       endTime.setHours(8, 0, 0, 0);
@@ -233,18 +241,20 @@ const sqlSnReadOut = `
       const sqlTrigger = `SELECT * FROM sn_aoi_trigger`;
       const sqlSf = `SELECT DISTINCT LEFT(PartNum,7) PN ,ULMark94V,NumOfLayer,ProdClass FROM
         prodbasic WHERE LEFT(PartNum,4)<>'UMGL' AND ULMark94V <>''`;
-    
+        const aoiconn = await mysqlConnection(getDbConfig('aoi'));
       // 並行執行多個查詢
-      const [snvrsResult, triggerResult, sfResult] = await Promise.all([
+      const [snvrsResult,triggerResult] = await Promise.all([
         poolSNDc.query(snvrs),
+        // poolAcme.query(sqlSf),
         queryFunc(aoiconn,sqlTrigger),
         // poolDc.query(sqlTrigger),
         // poolAcme.query(sqlSf)
       ]);
-      // res.json(snvrsResult.recordset);
+      // res.json(triggerResult);
       
       const rawData = snvrsResult.recordset;
-      const triggerData = triggerResult.recordset;
+      const triggerData = triggerResult;
+      // res.json(rawData);
       // const sfData = sfResult.recordset;
       const summaryData = [];
   
@@ -254,8 +264,8 @@ const sqlSnReadOut = `
         const layerCheck = (Number(layerAry[2]) - Number(layerAry[1]) + 1) / 2;
   
         // const sfIdx = sfData.findIndex(s => r.PartNo === s.PN);
-        const triIdx = triggerData.findIndex(t => r.PartNo === t.ShortPart);
-  
+        const triIdx = triggerData.findIndex(t => r.PartNo === t.shortpart);
+        console.log(triIdx);
         // if (sfIdx !== -1) {
         //   const { ULMark94V, NumOfLayer, ProdClass } = sfData[sfIdx];
         //   r.ULMark94V = ULMark94V;
