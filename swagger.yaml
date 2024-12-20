@@ -5,7 +5,8 @@ info:
   version: 1.0.0
 
 servers:
-  - url: http://10.22.94.69:3000
+  # - url: http://10.22.94.69:3000
+  - url: http://localhost:3000
     description: 開發環境
 
 components:
@@ -79,6 +80,10 @@ components:
                   type: string
                 bossid:
                   type: string
+                authority:
+                  type: array
+                  items:
+                    type: string
 
     ReviseWhitelistRequest:
       type: object
@@ -156,7 +161,7 @@ paths:
   /user/login:
     post:
       summary: 用戶登入
-      description: 驗證用戶憑證並返回 JWT token
+      description: 驗證用戶憑證並返回 JWT token，並返回用戶資料、權限列表
       tags:
         - authentication
       requestBody:
@@ -184,16 +189,7 @@ paths:
                       message: 用戶不存在或帳號密碼錯誤，請重新輸入
                       time: 1234567890
         '500':
-          description: 服務器錯誤
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/StandardResponse'
-                  - example:
-                      status: error
-                      message: 服務暫時無法使用，請稍後再試
-                      time: 1234567890
+          $ref: '#/components/responses/ServerError'
 
   /user/verify:
     get:
@@ -225,27 +221,13 @@ paths:
                           email:
                             type: string
         '401':
-          description: 未登入
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/StandardResponse'
-                  - example:
-                      status: error
-                      message: 未登入
-                      time: 123456789
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: 驗證錯誤
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/StandardResponse'
-                  - example:
-                      status: error
-                      message: 驗證錯誤
-                      time: 123456789
+                $ref: '#/components/schemas/StandardResponse'
 
   /user/record:
     post:
@@ -270,37 +252,28 @@ paths:
               properties:
                 ID:
                   type: string
+                  description: ���戶ID
                 Name:
                   type: string
+                  description: 用戶名稱
                 DeptName:
                   type: string
+                  description: 部門名稱
                 Time:
                   type: string
+                  description: 訪問時間
                 Path:
                   type: string
+                  description: 訪問路徑
       responses:
         '200':
           description: 記錄成功
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/StandardResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
+                $ref: '#/components/schemas/StandardResponse'
         '500':
-          description: 記錄失敗
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/StandardResponse'
-                  - example:
-                      status: error
-                      message: 記錄創建失敗
-                      time: 1234567890
+          $ref: '#/components/responses/ServerError'
 
   /user/record/{st}:
     get:
@@ -334,21 +307,18 @@ paths:
                           properties:
                             Count:
                               type: integer
+                              description: 記錄數量
         '500':
-          description: 查詢失敗
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/StandardResponse'
-                  - example:
-                      status: error
-                      message: 記錄查詢失敗
-                      time: 1234567890
+          $ref: '#/components/responses/ServerError'
 
   /user/revisewhitelist:
     post:
       summary: 修改用戶白名單權限
+      description: |
+        更新指定用戶的權限列表。
+        - 將用戶現有權限標記為刪除
+        - 插入新的權限記錄
+        - 使用事務確保數據一致性
       tags:
         - authentication
       requestBody:
@@ -408,3 +378,77 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/ServerError'
+
+  /user/getwhitelist:
+    get:
+      summary: 獲取白名單列表
+      description: 獲取所有未刪除的白名單記錄
+      tags:
+        - authentication
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    description: 響應狀態
+                    example: "success"
+                  message:
+                    type: string
+                    description: 響應訊息
+                    example: "成功"
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: 記錄ID
+                          example: "1"
+                        uid:
+                          type: string
+                          description: 用戶ID
+                          example: "A4378"
+                        authority:
+                          type: string
+                          description: 權限代碼
+                          example: "1673"
+                        creater:
+                          type: string
+                          description: 創建者ID
+                          example: "A4378"
+                        isdelete:
+                          type: string
+                          description: 是否刪除
+                          enum: ["true", "false"]
+                          example: "false"
+                        time:
+                          type: string
+                          description: 創建時間
+                          example: "2024-12-20 06:11:23"
+                  time:
+                    type: integer
+                    description: 時間戳
+                    example: 1703055083000
+        '500':
+          description: 服務器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [error]
+                  message:
+                    type: string
+                    example: "查詢失敗"
+                  time:
+                    type: integer
+                    example: 1703055083000
